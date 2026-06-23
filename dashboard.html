@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#060a14">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💊</text></svg>">
+<title>MedRep CRM — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#060a14;--surface:#0d1526;--surface2:#111e35;
+    --border:rgba(99,179,237,0.12);--accent:#3b82f6;--accent2:#06b6d4;
+    --green:#10b981;--amber:#f59e0b;--red:#ef4444;
+    --text:#e2e8f0;--muted:#64748b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 80% -10%,rgba(6,182,212,0.12) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at -10% 90%,rgba(59,130,246,0.1) 0%,transparent 60%);pointer-events:none;z-index:0;}
+  .grid-bg{position:fixed;inset:0;background-image:linear-gradient(rgba(59,130,246,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.04) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+  .container{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:26px 16px 100px;}
+
+  /* Header */
+  .header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:26px;flex-wrap:wrap;gap:12px;animation:slideDown 0.6s cubic-bezier(0.16,1,0.3,1);}
+  .brand-head{display:flex;align-items:center;gap:14px;}
+  .brand-logo{width:72px;height:72px;border-radius:22px;object-fit:cover;border:1px solid rgba(6,182,212,0.28);box-shadow:0 0 30px rgba(6,182,212,0.16);flex-shrink:0;}
+  .logo-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:100px;padding:5px 14px;font-size:10px;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);margin-bottom:10px;}
+  .logo-badge span{width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 2s infinite;}
+  h1{font-family:'Syne',sans-serif;font-size:clamp(22px,5vw,32px);font-weight:800;background:linear-gradient(135deg,#e2e8f0 0%,#93c5fd 50%,#67e8f9 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .header-btns{display:flex;gap:9px;flex-wrap:wrap;}
+  .btn-primary{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#2563eb,#0891b2);color:white;text-decoration:none;padding:10px 17px;border-radius:11px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.5px;transition:all 0.2s;box-shadow:0 6px 20px rgba(37,99,235,0.3);border:none;cursor:pointer;}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(37,99,235,0.45);}
+  .btn-export{background:linear-gradient(135deg,#059669,#0891b2);}
+  .btn-select{background:linear-gradient(135deg,#334155,#0f766e);}
+  .btn-select.active{background:linear-gradient(135deg,#0e7490,#2563eb);}
+  .btn-danger{background:linear-gradient(135deg,#dc2626,#b91c1c);}
+  .btn-danger:disabled{opacity:0.45;cursor:not-allowed;transform:none;box-shadow:none;}
+
+  /* Stats */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:22px;animation:slideUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.1s both;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 17px;position:relative;overflow:hidden;transition:transform 0.2s,border-color 0.2s;cursor:pointer;}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(99,179,237,0.3),transparent);}
+  .stat-card:hover{transform:translateY(-3px);border-color:rgba(99,179,237,0.25);}
+  .stat-label{font-size:10px;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+  .stat-value{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;background:linear-gradient(135deg,var(--accent2),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+
+  /* Analytics */
+  .analytics{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px;animation:slideUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.14s both;}
+  @media(max-width:560px){.analytics{grid-template-columns:1fr;}}
+  .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px 20px;}
+  .chart-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
+  .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .bar-label{font-size:12px;color:var(--muted);width:80px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .bar-track{flex:1;background:rgba(99,179,237,0.08);border-radius:100px;height:7px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 0.8s cubic-bezier(0.16,1,0.3,1);}
+  .bar-count{font-size:11px;font-family:'Syne',sans-serif;font-weight:700;color:var(--accent2);width:20px;text-align:right;}
+
+  /* Filters */
+  .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;animation:slideUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.18s both;}
+  .filter-group{position:relative;flex:1;min-width:140px;}
+  .filter-group label{display:block;font-size:10px;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+  .filter-group select{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:11px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;padding:10px 14px 10px 36px;outline:none;cursor:pointer;appearance:none;transition:border-color 0.2s;}
+  .filter-group select:focus{border-color:rgba(59,130,246,0.5);}
+  .filter-icon{position:absolute;left:12px;bottom:11px;font-size:13px;pointer-events:none;}
+  .clear-btn{align-self:flex-end;padding:10px 15px;background:transparent;border:1px solid var(--border);border-radius:11px;color:var(--muted);font-family:'Syne',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+  .clear-btn:hover{border-color:rgba(239,68,68,0.4);color:#f87171;background:rgba(239,68,68,0.06);}
+
+  /* Search */
+  .search-wrap{position:relative;margin-bottom:12px;animation:slideUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.2s both;}
+  .search-wrap input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:13px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;padding:12px 14px 12px 44px;outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
+  .search-wrap input::placeholder{color:#3d5070;}
+  .search-wrap input:focus{border-color:rgba(59,130,246,0.5);box-shadow:0 0 0 3px rgba(59,130,246,0.1);}
+  .search-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none;}
+
+  .result-meta{font-size:12px;color:var(--muted);margin-bottom:10px;font-family:'Syne',sans-serif;}
+
+  /* Table */
+  .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:20px;overflow:hidden;animation:slideUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.24s both;box-shadow:0 20px 48px rgba(0,0,0,0.3);}
+  .table-header{display:grid;grid-template-columns:2fr 1.3fr 1fr 0.9fr 1.2fr 110px 90px;padding:12px 16px;background:rgba(59,130,246,0.06);border-bottom:1px solid var(--border);}
+  .th{font-size:10px;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+  .doctor-row{display:grid;grid-template-columns:2fr 1.3fr 1fr 0.9fr 1.2fr 110px 90px;padding:13px 16px;border-bottom:1px solid rgba(99,179,237,0.05);transition:background 0.2s;animation:rowIn 0.4s ease both;align-items:center;}
+  .doctor-row.selected{background:rgba(6,182,212,0.08);}
+  .doctor-row:last-child{border-bottom:none;}
+  .doctor-row:hover{background:rgba(59,130,246,0.04);}
+  .doctor-main{display:flex;align-items:center;gap:10px;min-width:0;}
+  .bulk-check{width:18px;height:18px;accent-color:var(--accent2);flex-shrink:0;cursor:pointer;}
+  .dr-name{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;}
+  .dr-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+  .cell{font-size:12px;color:#94a3b8;}
+
+  .badge{display:inline-block;padding:3px 9px;border-radius:100px;font-size:10px;font-family:'Syne',sans-serif;font-weight:700;white-space:nowrap;}
+  .badge-spec{background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.2);}
+  .badge-high{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.2);}
+  .badge-medium{background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.2);}
+  .badge-low{background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.2);}
+
+  /* Action buttons */
+  .actions{display:flex;gap:5px;}
+  .action-btn{width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all 0.2s;}
+  .action-btn:hover{transform:scale(1.08);}
+  .btn-edit:hover{border-color:rgba(59,130,246,0.4);background:rgba(59,130,246,0.1);}
+  .btn-visit:hover{border-color:rgba(16,185,129,0.4);background:rgba(16,185,129,0.1);}
+  .btn-followup:hover{border-color:rgba(245,158,11,0.4);background:rgba(245,158,11,0.1);}
+  .btn-wa:hover{border-color:rgba(37,211,102,0.4);background:rgba(37,211,102,0.1);}
+  .btn-del:hover{border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.1);}
+
+  /* Mobile cards */
+  .mobile-cards{display:none;flex-direction:column;gap:12px;}
+  @media(max-width:680px){
+    .brand-head{align-items:flex-start;}
+    .brand-logo{width:58px;height:58px;border-radius:18px;}
+    .table-wrap{background:transparent;border:none;box-shadow:none;}
+    .table-header{display:none;}
+    .doctor-row{display:none;}
+    .mobile-cards{display:flex;}
+  }
+  .m-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:15px;position:relative;animation:rowIn 0.4s ease both;transition:border-color 0.2s,transform 0.2s;}
+  .m-card.selected{border-color:rgba(6,182,212,0.55);background:rgba(6,182,212,0.08);}
+  .m-card:hover{border-color:rgba(59,130,246,0.25);transform:translateY(-2px);}
+  .m-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(99,179,237,0.3),transparent);border-radius:18px 18px 0 0;}
+  .m-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:9px;}
+  .m-name{font-family:'Syne',sans-serif;font-weight:800;font-size:15px;}
+  .m-clinic{font-size:12px;color:var(--muted);margin-top:2px;}
+  .m-badges{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
+  .m-comment{font-size:11px;color:#4a6080;padding-top:9px;border-top:1px solid var(--border);font-style:italic;margin-top:9px;}
+  .m-actions{display:flex;gap:6px;margin-top:10px;}
+  .m-actions .action-btn{flex:1;width:auto;height:32px;font-size:11px;border-radius:9px;}
+
+  /* Empty & Loading */
+  .empty{padding:60px 20px;text-align:center;display:none;}
+  .empty-icon{font-size:44px;margin-bottom:14px;opacity:0.4;}
+  .empty-text{font-family:'Syne',sans-serif;font-size:15px;color:var(--muted);}
+  .loading-state{padding:60px 20px;text-align:center;}
+  .loader{width:34px;height:34px;border:3px solid rgba(59,130,246,0.2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px;}
+  .loading-text{color:var(--muted);font-size:14px;}
+
+  /* Toast */
+
+  /* Footer credit */
+  .footer-credit{text-align:center;margin-top:28px;padding:16px;border-top:1px solid var(--border);}
+  .footer-credit p{font-size:12px;color:var(--muted);font-family:'DM Sans',sans-serif;}
+  .footer-credit strong{color:var(--accent2);}
+  .footer-credit a{color:var(--accent);text-decoration:none;font-weight:600;}
+  .footer-credit a:hover{color:var(--accent2);}
+
+  /* Date/time badge */
+  .datetime-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:100px;padding:5px 14px;font-size:11px;font-family:'Syne',sans-serif;font-weight:700;color:var(--green);margin-bottom:6px;}
+
+  /* Visit counter buttons */
+  .visit-btns{display:flex;gap:4px;align-items:center;}
+  .v-btn{min-width:28px;height:28px;border-radius:8px;border:none;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;padding:0 6px;}
+  .v-btn-1{background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3);}
+  .v-btn-1.done{background:rgba(16,185,129,0.35);color:#fff;border-color:var(--green);}
+  .v-btn-2{background:rgba(6,182,212,0.15);color:#67e8f9;border:1px solid rgba(6,182,212,0.3);}
+  .v-btn-2.done{background:rgba(6,182,212,0.35);color:#fff;border-color:var(--accent2);}
+  .v-count{font-size:10px;color:var(--muted);font-family:'Syne',sans-serif;}
+
+  /* Day + timing pills */
+  .day-time-list{display:flex;flex-direction:column;gap:4px;}
+  .day-time-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.18);border-radius:100px;padding:3px 9px;font-size:10px;font-family:'Syne',sans-serif;font-weight:700;white-space:nowrap;}
+  .day-time-pill .dt-day{color:var(--accent2);}
+  .day-time-pill .dt-sep{color:var(--muted);font-weight:400;}
+  .day-time-pill .dt-time{color:#94a3b8;}
+
+  /* Sort button */
+  .sort-btn{align-self:flex-end;padding:10px 15px;background:transparent;border:1px solid rgba(99,179,237,0.2);border-radius:11px;color:var(--accent2);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+  .sort-btn:hover{border-color:rgba(99,179,237,0.5);background:rgba(99,179,237,0.07);}
+  .sort-btn.active{background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.4);color:#93c5fd;}
+
+
+  /* Profile widget */
+  .profile-widget{position:relative;display:inline-flex;align-items:center;gap:10px;cursor:pointer;user-select:none;}
+  .profile-avatar{width:40px;height:40px;border-radius:50%;border:2px solid rgba(99,179,237,0.4);object-fit:cover;transition:border-color 0.2s,box-shadow 0.2s;flex-shrink:0;}
+  .profile-widget:hover .profile-avatar{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(6,182,212,0.15);}
+  .profile-name{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--text);letter-spacing:0.5px;white-space:nowrap;}
+  .profile-role{font-size:10px;color:var(--muted);font-family:'Syne',sans-serif;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;}
+  .profile-chevron{font-size:10px;color:var(--muted);transition:transform 0.2s;}
+  .profile-widget.open .profile-chevron{transform:rotate(180deg);}
+  .profile-dropdown{position:absolute;top:calc(100% + 10px);right:0;background:var(--surface);border:1px solid rgba(99,179,237,0.2);border-radius:16px;padding:8px;min-width:200px;z-index:1000;box-shadow:0 16px 48px rgba(0,0,0,0.5);opacity:0;transform:translateY(-8px) scale(0.97);pointer-events:none;transition:opacity 0.2s,transform 0.2s;}
+  .profile-dropdown::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(99,179,237,0.3),transparent);border-radius:16px 16px 0 0;}
+  .profile-widget.open .profile-dropdown{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}
+  .pd-header{display:flex;align-items:center;gap:10px;padding:10px 10px 12px;border-bottom:1px solid var(--border);margin-bottom:6px;}
+  .pd-avatar{width:44px;height:44px;border-radius:50%;border:2px solid rgba(99,179,237,0.3);object-fit:cover;flex-shrink:0;}
+  .pd-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--text);}
+  .pd-role-badge{display:inline-block;margin-top:3px;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.25);border-radius:100px;padding:2px 8px;font-size:10px;font-family:'Syne',sans-serif;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:1px;}
+  .pd-role-badge.guest{background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.25);color:#fbbf24;}
+  .pd-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;transition:all 0.15s;text-decoration:none;}
+  .pd-item:hover{background:rgba(59,130,246,0.08);color:var(--text);}
+  .pd-item.logout{color:#f87171;}
+  .pd-item.logout:hover{background:rgba(239,68,68,0.08);color:#fca5a5;}
+  .pd-item-icon{font-size:15px;width:22px;text-align:center;}
+
+
+  /* iPhone safe areas & touch */
+  body{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;}
+  .container{padding-bottom:max(100px, calc(80px + env(safe-area-inset-bottom)));padding-left:max(16px, env(safe-area-inset-left));padding-right:max(16px, env(safe-area-inset-right));}
+  button,a,.action-btn,.v-btn,.day-pill,.sort-btn,.clear-btn,.btn-primary{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+  input,select,textarea{font-size:16px!important;} /* prevent iOS zoom on focus */
+  .action-btn{min-width:36px;min-height:36px;} /* larger touch targets */
+  .v-btn{min-width:36px;min-height:36px;}
+  .pd-item{min-height:44px;} /* Apple HIG minimum */
+  .profile-widget{min-height:44px;}
+
+  @keyframes slideDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes slideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes rowIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="container">
+
+  <div class="header">
+    <div class="brand-head">
+      <img class="brand-logo" src="medrep-logo.png" alt="MedRep CRM logo">
+      <div>
+      <div class="logo-badge"><span></span> Live Dashboard</div>
+      <h1>Doctors Directory</h1>
+      <div class="datetime-badge" id="datetimeBadge">🕐 Loading…</div>
+      </div>
+    </div>
+    <div class="header-btns">
+      <button class="btn-primary btn-export admin-only" onclick="exportExcel()">📤 Export Excel</button>
+      <a href="plan.html" class="btn-primary">📅 Plan</a>
+      <button class="btn-primary btn-select admin-only" id="bulkSelectBtn" onclick="toggleBulkSelect()">Select Doctors</button>
+      <button class="btn-primary btn-danger admin-only" id="bulkDeleteBtn" onclick="deleteSelectedDoctors()" style="display:none" disabled>Delete Selected</button>
+      <a href="index.html" class="btn-primary admin-only">＋ Add Doctor</a>
+      <div id="profileMount"></div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card"><div class="stat-label">Total Doctors</div><div class="stat-value" id="statTotal">—</div></div>
+    <div class="stat-card"><div class="stat-label">🔴 High Priority</div><div class="stat-value" id="statHigh">—</div></div>
+    <div class="stat-card"><div class="stat-label">📅 This Month Visits</div><div class="stat-value" id="statVisits">—</div></div>
+    <div class="stat-card"><div class="stat-label">Showing</div><div class="stat-value" id="statShowing">—</div></div>
+  </div>
+
+  <!-- Analytics -->
+  <div class="analytics">
+    <div class="chart-card">
+      <div class="chart-title">By Specialty</div>
+      <div id="specChart"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">By Priority</div>
+      <div id="priorChart"></div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <div class="filter-group">
+      <label>Specialty</label>
+      <span class="filter-icon">🩺</span>
+      <select id="specFilter"><option value="all">All Specialties</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Day</label>
+      <span class="filter-icon">📅</span>
+      <select id="dayFilter">
+        <option value="all">All Days</option>
+        <option value="Saturday">Saturday</option>
+        <option value="Sunday">Sunday</option>
+        <option value="Monday">Monday</option>
+        <option value="Tuesday">Tuesday</option>
+        <option value="Wednesday">Wednesday</option>
+        <option value="Thursday">Thursday</option>
+        <option value="Friday">Friday</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Priority</label>
+      <span class="filter-icon">🎯</span>
+      <select id="priorityFilter">
+        <option value="all">All Priorities</option>
+        <option>High</option><option>Medium</option><option>Low</option>
+      </select>
+    </div>
+    <button class="sort-btn" id="sortBtn" onclick="cycleSort()">⇅ Sort: Default</button>
+    <button class="clear-btn" onclick="clearFilters()">✕ Clear</button>
+  </div>
+
+  <!-- Search -->
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input id="search" type="text" placeholder="Search name, clinic, brick…">
+  </div>
+
+  <div class="result-meta" id="resultMeta"></div>
+
+  <!-- Table -->
+  <div class="table-wrap" id="tableWrap">
+    <div class="loading-state" id="loadingState">
+      <div class="loader"></div>
+      <div class="loading-text">Loading doctors…</div>
+    </div>
+    <div class="table-header" id="tableHeader" style="display:none">
+      <div class="th">Doctor</div>
+      <div class="th">Clinic / Brick</div>
+      <div class="th">Specialty</div>
+      <div class="th">Priority</div>
+      <div class="th">Days / Timing</div>
+      <div class="th">Visits</div>
+      <div class="th">Actions</div>
+    </div>
+    <div id="tableBody"></div>
+    <div class="mobile-cards" id="mobileCards"></div>
+    <div class="empty" id="emptyState">
+      <div class="empty-icon">🏥</div>
+      <div class="empty-text">No doctors match your filters</div>
+    </div>
+  </div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<footer class="footer-credit">
+  <p>Built by <strong>Abdelrahman Usama</strong> · <a href="https://instagram.com/a.usama56" target="_blank">@a.usama56</a></p>
+</footer>
+
+</div>
+
+<!-- Guest mode banner -->
+<div id="guestBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:500;background:linear-gradient(90deg,rgba(245,158,11,0.18),rgba(6,182,212,0.12));border-bottom:1px solid rgba(245,158,11,0.3);padding:9px 20px;display:none;align-items:center;justify-content:space-between;gap:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#fbbf24;backdrop-filter:blur(8px);">
+  <span>👁️ Guest Mode — View Only</span>
+  <button onclick="doLogoutGuest()" style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);border-radius:8px;color:#fbbf24;padding:4px 12px;font-size:11px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;">🚪 Logout</button>
+</div>
+
+<script>
+// ── Session Guard ──────────────────────────────────────────────
+(function() {
+  const KEY = 'crm_session', MS = 60*60*1000;
+  function getSession() {
+    try {
+      const s = JSON.parse(localStorage.getItem(KEY)||'null');
+      if (!s || Date.now()-s.lastActive > MS) { localStorage.removeItem(KEY); return null; }
+      return s;
+    } catch { return null; }
+  }
+  function touch() {
+    const s = getSession();
+    if (s) { s.lastActive = Date.now(); localStorage.setItem(KEY, JSON.stringify(s)); }
+  }
+  const s = getSession();
+  if (!s) { sessionStorage.setItem('crm_redirect','dashboard.html'); location.href='login.html'; return; }
+  touch();
+  document.addEventListener('click', touch);
+  document.addEventListener('keydown', touch);
+  // Store role globally for use after DOM loads
+  window._crmRole = s.role;
+})();
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, deleteDoc, updateDoc, orderBy, query } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+const config = {
+  apiKey:"AIzaSyDGgF8rIs2aJv6Ov5cHijl4fpHvFJRgCkM",
+  authDomain:"usamacrm.firebaseapp.com",
+  projectId:"usamacrm",
+  storageBucket:"usamacrm.firebasestorage.app",
+  messagingSenderId:"21544199204",
+  appId:"1:21544199204:web:9d6bb252f90b5dba8764b1"
+};
+const db = getFirestore(initializeApp(config), 'visitat');
+
+let doctors = [];
+let bulkSelectMode = false;
+let selectedDoctorIds = new Set();
+// direct action — no target IDs needed
+
+// Sort modes: 'default' | 'day' | 'visits-asc' | 'visits-desc'
+let sortMode = 'default';
+const sortModes = ['default','day','visits-asc','visits-desc'];
+const sortLabels = ['⇅ Sort: Default','📅 Sort: Day','🔢 Sort: Visits ↑','🔢 Sort: Visits ↓'];
+
+function currentMonthKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+// Live clock
+function updateClock() {
+  const now = new Date();
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const day = days[now.getDay()];
+  const date = now.getDate();
+  const month = months[now.getMonth()];
+  const year = now.getFullYear();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('datetimeBadge').textContent = `🕐 ${day}, ${date} ${month} ${year}  —  ${h}:${m}:${s}`;
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// No toasts — silent operation
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+const IS_GUEST = window._crmRole === 'guest';
+
+// Apply guest mode restrictions
+function applyGuestMode() {
+  if (!IS_GUEST) return;
+  // Show banner (add top padding to container)
+  const banner = document.getElementById('guestBanner');
+  banner.style.display = 'flex';
+  document.querySelector('.container').style.paddingTop = '68px';
+  document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+}
+
+async function load() {
+  applyGuestMode();
+  try {
+    const q = query(collection(db, 'doctors'), orderBy('createdAt', 'desc'));
+    const snap = await getDocs(q);
+    doctors = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+  } catch {
+    const snap = await getDocs(collection(db, 'doctors'));
+    doctors = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+  }
+
+  updateDashboardSummary();
+
+  document.getElementById('loadingState').style.display='none';
+  document.getElementById('tableHeader').style.display='grid';
+  render();
+}
+
+function buildChart(id, data) {
+  const el = document.getElementById(id);
+  const max = Math.max(...data.map(d=>d.count), 1);
+  el.innerHTML = data.map(d=>`
+    <div class="bar-row">
+      <span class="bar-label" title="${esc(d.label)}">${esc(d.label)}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${(d.count/max)*100}%"></div></div>
+      <span class="bar-count">${d.count}</span>
+    </div>`).join('');
+}
+
+function uniqueDoctorsBySpecialty(specialty) {
+  const seen = new Set();
+  return doctors.filter(d => d.specialty === specialty).filter(d => {
+    const key = `${d.name||''}|${d.clinic||''}|${d.specialty||''}`.toLowerCase().replace(/\s+/g, ' ').trim();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).length;
+}
+
+function updateDashboardSummary() {
+  const specs = [...new Set(doctors.map(d=>d.specialty).filter(Boolean))].sort();
+  const sf = document.getElementById('specFilter');
+  if (sf) {
+    const current = sf.value;
+    sf.innerHTML = '<option value="all">All Specialties</option>';
+    specs.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s;
+      o.textContent = s;
+      sf.appendChild(o);
+    });
+    sf.value = specs.includes(current) ? current : 'all';
+  }
+  const monthKey = currentMonthKey();
+  const thisMonthVisits = doctors.reduce((sum, d) => sum + (d.visits && d.visits[monthKey] ? d.visits[monthKey] : 0), 0);
+  document.getElementById('statTotal').textContent = doctors.length;
+  document.getElementById('statHigh').textContent = doctors.filter(d=>d.priority==='High').length;
+  document.getElementById('statVisits').textContent = thisMonthVisits;
+  buildChart('specChart', specs.map(s=>({label:s,count:uniqueDoctorsBySpecialty(s)})).sort((a,b)=>b.count-a.count).slice(0,5));
+  buildChart('priorChart', ['High','Medium','Low'].map(p=>({label:p,count:doctors.filter(d=>d.priority===p).length})).filter(d=>d.count>0));
+}
+
+const DAY_ORDER = ['Saturday','Sunday','Monday','Tuesday','Wednesday','Thursday','Friday'];
+
+function render() {
+  const spec = document.getElementById('specFilter').value;
+  const dayF = document.getElementById('dayFilter').value;
+  const pri = document.getElementById('priorityFilter').value;
+  const q = document.getElementById('search').value.toLowerCase().trim();
+  const monthKey = currentMonthKey();
+
+  let filtered = doctors.filter(x => {
+    const mSpec = spec==='all' || x.specialty===spec;
+    const mDay = dayF==='all' || (x.days||[x.day]).includes(dayF);
+    const mPri = pri==='all' || x.priority===pri;
+    const mQ = !q || (x.name||'').toLowerCase().includes(q) || (x.clinic||'').toLowerCase().includes(q) || (x.brick||'').toLowerCase().includes(q);
+    return mSpec && mDay && mPri && mQ;
+  });
+
+  // Sorting
+  if (sortMode === 'day') {
+    filtered = [...filtered].sort((a,b) => {
+      const ai = Math.min(...(a.days||[a.day]).map(d=>DAY_ORDER.indexOf(d)).filter(i=>i>=0));
+      const bi = Math.min(...(b.days||[b.day]).map(d=>DAY_ORDER.indexOf(d)).filter(i=>i>=0));
+      return ai - bi;
+    });
+  } else if (sortMode === 'visits-asc') {
+    filtered = [...filtered].sort((a,b)=> (a.visits&&a.visits[monthKey]?a.visits[monthKey]:0) - (b.visits&&b.visits[monthKey]?b.visits[monthKey]:0));
+  } else if (sortMode === 'visits-desc') {
+    filtered = [...filtered].sort((a,b)=> (b.visits&&b.visits[monthKey]?b.visits[monthKey]:0) - (a.visits&&a.visits[monthKey]?a.visits[monthKey]:0));
+  }
+
+  document.getElementById('statShowing').textContent = filtered.length;
+  document.getElementById('resultMeta').textContent = filtered.length===doctors.length ? `${doctors.length} doctors` : `${filtered.length} of ${doctors.length} doctors`;
+  updateBulkActions();
+
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+
+  filtered.forEach((x, i) => {
+    const row = document.createElement('div');
+    row.className = 'doctor-row';
+    row.style.animationDelay = `${i*0.035}s`;
+    const priClass = `badge-${(x.priority||'medium').toLowerCase()}`;
+    const priEmoji = x.priority==='High'?'🔴':x.priority==='Low'?'🟢':'🟡';
+    const dayList = (x.days||[x.day]).join(', ');
+    const thisMonthVisits = x.visits && x.visits[monthKey] ? x.visits[monthKey] : 0;
+    const isSelected = selectedDoctorIds.has(x.id);
+    if (isSelected) row.classList.add('selected');
+
+    row.innerHTML = `
+      <div class="doctor-main">${bulkSelectMode?`<input class="bulk-check" type="checkbox" ${isSelected?'checked':''} onclick="toggleDoctorSelection('${x.id}', this.checked)">`:''}<div><div class="dr-name">${esc(x.name)}</div><div class="dr-sub">🏥 ${esc(x.clinic)}</div></div></div>
+      <div class="cell">${esc(x.clinic)}${x.brick?`<br><span style="font-size:11px;color:var(--muted)">📍 ${esc(x.brick)}</span>`:''}</div>
+      <div><span class="badge badge-spec">${esc(x.specialty)}</span></div>
+      <div><span class="badge ${priClass}">${priEmoji}</span></div>
+      <div class="day-time-list">${(x.days||[x.day]).map(d=>`<span class="day-time-pill"><span class="dt-day">${esc(d)}</span>${(x.timings&&x.timings[d])?`<span class="dt-sep">·</span><span class="dt-time">${esc(x.timings[d])}</span>`:''}</span>`).join('')}</div>
+      <div class="visit-btns">
+        <button class="v-btn v-btn-1 ${thisMonthVisits>=1?'done':''}" title="1st visit this month" ${IS_GUEST?'disabled style="opacity:0.4;cursor:not-allowed"':''} onclick="${IS_GUEST?'':'setVisitCount(\''+x.id+'\',1)'}">1</button>
+        <button class="v-btn v-btn-2 ${thisMonthVisits>=2?'done':''}" title="2nd visit this month" ${IS_GUEST?'disabled style="opacity:0.4;cursor:not-allowed"':''} onclick="${IS_GUEST?'':'setVisitCount(\''+x.id+'\',2)'}">2</button>
+        <span class="v-count">${thisMonthVisits>0?`×${thisMonthVisits}`:''}</span>
+      </div>
+      <div class="actions">
+        ${IS_GUEST ? '<span style="font-size:10px;color:var(--muted);font-family:\'Syne\',sans-serif;font-weight:700;">VIEW ONLY</span>' : `
+        <button class="action-btn btn-edit" title="Edit" onclick="editDoctor('${x.id}')">✏️</button>
+        <button class="action-btn btn-followup" title="Followup" onclick="askFollowup('${x.id}','${esc(x.name)}')">📞</button>
+        ${x.phone?`<button class="action-btn btn-wa" title="WhatsApp" onclick="openWA('${x.phone}')">💬</button>`:''}
+        <button class="action-btn btn-del" title="Delete" onclick="askDelete('${x.id}','${esc(x.name)}')">🗑️</button>
+        `}
+      </div>`;
+    tbody.appendChild(row);
+  });
+
+  // Mobile cards
+  const mc = document.getElementById('mobileCards');
+  mc.innerHTML = '';
+  filtered.forEach((x, i) => {
+    const c = document.createElement('div');
+    c.className = 'm-card';
+    c.style.animationDelay = `${i*0.05}s`;
+    const priClass = `badge-${(x.priority||'medium').toLowerCase()}`;
+    const priEmoji = x.priority==='High'?'🔴':x.priority==='Low'?'🟢':'🟡';
+    const dayList = (x.days||[x.day]).join(', ');
+    const thisMonthVisits = x.visits && x.visits[monthKey] ? x.visits[monthKey] : 0;
+    const isSelected = selectedDoctorIds.has(x.id);
+    if (isSelected) c.classList.add('selected');
+
+    c.innerHTML = `
+      <div class="m-top">
+        <div class="doctor-main">${bulkSelectMode?`<input class="bulk-check" type="checkbox" ${isSelected?'checked':''} onclick="toggleDoctorSelection('${x.id}', this.checked)">`:''}<div>
+          <div class="m-name">👨‍⚕️ ${esc(x.name)}</div>
+          <div class="m-clinic">🏥 ${esc(x.clinic)}${x.brick?` · 📍 ${esc(x.brick)}`:''}</div>
+        </div></div>
+        <span class="badge ${priClass}">${priEmoji}</span>
+      </div>
+      <div class="m-badges">
+        <span class="badge badge-spec">🩺 ${esc(x.specialty)}</span>
+        <div class="day-time-list" style="margin-top:2px">${(x.days||[x.day]).map(d=>`<span class="day-time-pill"><span class="dt-day">📅 ${esc(d)}</span>${(x.timings&&x.timings[d])?`<span class="dt-sep">·</span><span class="dt-time">${esc(x.timings[d])}</span>`:''}</span>`).join('')}</div>
+      </div>
+      <div class="visit-btns" style="margin-bottom:8px">
+        <button class="v-btn v-btn-1 ${thisMonthVisits>=1?'done':''}" ${IS_GUEST?'disabled style="opacity:0.4;cursor:not-allowed"':''} onclick="${IS_GUEST?'':'setVisitCount(\''+x.id+'\',1)'}">1</button>
+        <button class="v-btn v-btn-2 ${thisMonthVisits>=2?'done':''}" ${IS_GUEST?'disabled style="opacity:0.4;cursor:not-allowed"':''} onclick="${IS_GUEST?'':'setVisitCount(\''+x.id+'\',2)'}">2</button>
+        <span class="v-count" style="font-size:11px">${thisMonthVisits>0?`${thisMonthVisits} visit${thisMonthVisits>1?'s':''} this month`:''}</span>
+      </div>
+      ${x.comments?`<div class="m-comment">"${esc(x.comments)}"</div>`:''}
+      ${IS_GUEST ? '' : `<div class="m-actions">
+        <button class="action-btn btn-edit" onclick="editDoctor('${x.id}')">✏️</button>
+        <button class="action-btn btn-followup" onclick="askFollowup('${x.id}','${esc(x.name)}')">📞</button>
+        ${x.phone?`<button class="action-btn btn-wa" onclick="openWA('${x.phone}')">💬</button>`:''}
+        <button class="action-btn btn-del" onclick="askDelete('${x.id}','${esc(x.name)}')">🗑️</button>
+      </div>`}`;
+    mc.appendChild(c);
+  });
+
+  const hasResults = filtered.length>0;
+  document.getElementById('emptyState').style.display = hasResults?'none':'block';
+  document.getElementById('tableHeader').style.display = hasResults?'grid':'none';
+}
+
+window.cycleSort = function() {
+  const idx = sortModes.indexOf(sortMode);
+  sortMode = sortModes[(idx+1) % sortModes.length];
+  const btn = document.getElementById('sortBtn');
+  btn.textContent = sortLabels[sortModes.indexOf(sortMode)];
+  btn.classList.toggle('active', sortMode !== 'default');
+  render();
+};
+
+function updateBulkActions() {
+  const selectBtn = document.getElementById('bulkSelectBtn');
+  const deleteBtn = document.getElementById('bulkDeleteBtn');
+  if (!selectBtn || !deleteBtn) return;
+  const count = selectedDoctorIds.size;
+  selectBtn.textContent = bulkSelectMode ? 'Cancel Select' : 'Select Doctors';
+  selectBtn.classList.toggle('active', bulkSelectMode);
+  deleteBtn.style.display = bulkSelectMode ? 'inline-flex' : 'none';
+  deleteBtn.disabled = count === 0;
+  deleteBtn.textContent = count ? `Delete Selected (${count})` : 'Delete Selected';
+}
+
+window.toggleBulkSelect = function() {
+  bulkSelectMode = !bulkSelectMode;
+  selectedDoctorIds.clear();
+  updateBulkActions();
+  render();
+};
+
+window.toggleDoctorSelection = function(id, checked) {
+  if (checked) selectedDoctorIds.add(id);
+  else selectedDoctorIds.delete(id);
+  updateBulkActions();
+  render();
+};
+
+window.deleteSelectedDoctors = async function() {
+  const ids = [...selectedDoctorIds];
+  if (!ids.length) return;
+  const ok = confirm(`Delete ${ids.length} selected doctor${ids.length>1?'s':''}?`);
+  if (!ok) return;
+  const btn = document.getElementById('bulkDeleteBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Deleting...'; }
+  try {
+    await Promise.all(ids.map(id => deleteDoc(doc(db, 'doctors', id))));
+    doctors = doctors.filter(d => !selectedDoctorIds.has(d.id));
+    selectedDoctorIds.clear();
+    bulkSelectMode = false;
+    updateDashboardSummary();
+    render();
+  } catch(e) {
+    console.error(e);
+    updateBulkActions();
+  }
+};
+
+// Set visit count to exactly N for this month (toggle off if already ≥ N and N is current)
+window.setVisitCount = async function(id, n) {
+  const monthKey = currentMonthKey();
+  const d = doctors.find(x => x.id === id);
+  if (!d) return;
+  const visits = { ...(d.visits || {}) };
+  const current = visits[monthKey] || 0;
+  // If clicking the button that matches current count, toggle off (set to n-1); else set to n
+  visits[monthKey] = current === n ? n - 1 : n;
+  try {
+    await updateDoc(doc(db, 'doctors', id), { visits });
+    d.visits = visits;
+    render();
+  } catch(e) { console.error(e); }
+};
+
+window.editDoctor = function(id) {
+  const d = doctors.find(x=>x.id===id);
+  if (!d) return;
+  location.href = `index.html?edit=${encodeURIComponent(JSON.stringify(d))}`;
+};
+
+window.openWA = function(phone) {
+  const clean = phone.replace(/\D/g,'');
+  window.open(`https://wa.me/${clean}`, '_blank');
+};
+
+// Direct visit log — no popup
+window.askVisit = async function(id, name) {
+  const monthKey = currentMonthKey();
+  try {
+    const d = doctors.find(x => x.id === id);
+    const visits = { ...(d.visits || {}) };
+    visits[monthKey] = (visits[monthKey] || 0) + 1;
+    await updateDoc(doc(db, 'doctors', id), { visits });
+    d.visits = visits;
+    render();
+  } catch(e) { console.error(e); }
+};
+
+// Direct followup log — no popup
+window.askFollowup = async function(id, name) {
+  const monthKey = currentMonthKey();
+  try {
+    const d = doctors.find(x => x.id === id);
+    const followups = { ...(d.followups || {}) };
+    followups[monthKey] = (followups[monthKey] || 0) + 1;
+    await updateDoc(doc(db, 'doctors', id), { followups });
+    d.followups = followups;
+    render();
+  } catch(e) { console.error(e); }
+};
+
+// Direct delete — no popup
+window.askDelete = async function(id, name) {
+  try {
+    await deleteDoc(doc(db, 'doctors', id));
+    doctors = doctors.filter(d=>d.id!==id);
+    selectedDoctorIds.delete(id);
+    updateDashboardSummary();
+    render();
+  } catch(e) { console.error(e); }
+};
+
+window.exportExcel = function() {
+  const headers = ['Name','Clinic','Brick','Specialty','Days','Timings','Priority','Comments','This Month Visits','This Month Followups'];
+  const monthKey = currentMonthKey();
+  const rows = doctors.map(d=>[
+    d.name,d.clinic,d.brick,d.specialty,
+    (d.days||[d.day]).join(';'),
+    (d.days||[d.day]).map(day => `${day}: ${d.timings&&d.timings[day]?d.timings[day]:''}`).join('; '),
+    d.priority||'—',d.comments||'—',
+    d.visits && d.visits[monthKey] ? d.visits[monthKey] : 0,
+    d.followups && d.followups[monthKey] ? d.followups[monthKey] : 0
+  ]);
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  ws['!cols'] = headers.map((h, i)=>({wch: i===0?26:i===5?34:18}));
+  XLSX.utils.book_append_sheet(wb, ws, 'Doctors');
+  XLSX.writeFile(wb, `doctors_${new Date().toISOString().slice(0,10)}.xlsx`);
+};
+window.exportCSV = window.exportExcel;
+
+window.clearFilters = function() {
+  document.getElementById('specFilter').value='all';
+  document.getElementById('dayFilter').value='all';
+  document.getElementById('priorityFilter').value='all';
+  document.getElementById('search').value='';
+  sortMode = 'default';
+  document.getElementById('sortBtn').textContent = '⇅ Sort: Default';
+  document.getElementById('sortBtn').classList.remove('active');
+  render();
+};
+
+document.getElementById('specFilter').onchange = render;
+document.getElementById('dayFilter').onchange = render;
+document.getElementById('priorityFilter').onchange = render;
+document.getElementById('search').oninput = render;
+
+load();
+
+// ── Profile Widget ─────────────────────────────────────────────
+const AVATAR_SRC = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAB4AHgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDyf4dzzWGuah9nQMZLSHflec75BnGRmtfWI0lls5UgB/esSy5/u54XHyjHaoPhkFn8V39vPEH36dH8pUHd+8kz1+tdLrOioZLIQxwbWnYAGMDaNrHHGDgYFeLK97nuU7WMK21FrS1lf7NJHGD5tuflOGU7gQeOCQR9DWl4s1GOTR7a+jkaOL7bA+1zgBcZOD24/XpTEsba68PXkgEgVIn/AHZcld2G3cMDxwCMHuRU3iCIXXhXTwQbd5ZLZWJAZU4BJHGO3fpVrYzbtc8+sJEn0/UFlU7DbLsUKWIGwYJ9DgZ/Gui+HhMUsoChVaLzOmeu049/wrlZEjSa5FrPHbFIFGwlgGO0nP3Tk/XqfzrovAFx5V3bO0hGYmjJ2524fIz+BHPpWlFpq5jWTR614FQy2t8Fdk2zsMjjbz/SvKvjGVk8e6QJCWUeYSAPcV6t4FmH9mag33lNzJz+PFeSfF2RR8QNLMkYdVWQ7c4zzWlLZs6Kv8H7igDbJqTqF83ci+U8eArDLdT03dveqWpW8k9xGFUucElVxjHpwOa0lCfbZfLiiETRqzQqc926Ht9B60yxZY7YvKPlYkCVvY9CTz07nv1561LY8y5keG7SZrGREmQM0jMqjGcgnnnp071DqkYFrYLwSzoC2Ppxnv8A41d0adodMml8vblWCHvksw/QZrOvcCz0tBjClQpH071yvXm+Z3UfjgvNfmY3igBp7OMfxXKDFaXiJQNW01cE85x9MVS8RqTqWnqq/wDLyvT1FaGqq0/iPTI/bJ4rkv7tN+Uj6Cj/ABavrA6j4nabdXOmaZb2q2s0h2ybIbpJCFCYG7aflb/ZPNFO8J21rBBcefKrvdzyOq+WV2jtz3PX8qK9qlbkVz46u/3jsX/h6ix+K7p/PkgjXT43kljZRj98453DGOa6nVtUURwXEdxcypDeGN28iIhvvITtBBAJPc1x03hnVNY8RafeXRbw/FcQMPMs5RKCyyBjwMDgNnA7jtW78QPhx408P3otxq+oXUbkzQyNNCfO5JD4P3S3Bwema8t1oq12e2qVm0O07VH/ALPvLWRI0UxSRAG3dD1cDHJz1ApdavpP+EcsfPkSOFXtndyMsRgdOcAA9uc81xf2fxhptt5o1S8jRhwpgjIwWGV6e5aqWpv4zsbWO1Z7loIdogWSxGSU+ZR/47WsWpbNHNPToWpJo4ZbtibgB4UZgwyR8hU59PpWj4LYSrIIz8zLHIjDuQdrdfYCuRuX1mOSaaZ7XegCtm1BBG0kH72f4s5x1xUela9rekkPZ2rTlTt/48nKp3xnd7ZrWnFpGNWSb0Po74cskmj3Akb5vPdmHXoxryn4mSq3xLsBtEhCyNtPOeuOPTNWPBfinxVNpzvYrpPzyFmSe2uEZCec5zgjtxmue1Q6/rPi1L14NOW5iidRseRVbDKMZxkElx+tFL3Yu51V3eivkMncprMxiUynahdCAckZz/OrP7kWaNDIuCWXaW4+h/zxUd3FrUMsvm2Wl887UuWG3AxxlO9c3qGr3doirdaaYFkTBPmZWQcjg461ppLY87lYh+1x6ZNNEytGqNlXl28/Mc4Xk8HjPWrk29o9KDqASoYgdBx0qk1zJDpTFreLyZACWE3cDHTb+H4VYht7zbYvNakRAArKJVIAOSMjr3FYVH7kr+f5HXhov20Ld1+ZX1fa+vaYrZA88k49hWv5Xn+OtNgQHJCgAdyWxiqE8Il8Q2e5Qdu9gew+U81pwqJ/HlrgnciDGBz3NefLaC/uv8z6TDr35v8AvR/K5seK7h9I1ExR28tyYf3ZFuVIR1Yggn1znseDRVNDE8xkg0aeTnqSBn/x7+dFeoq7tsfMSwkb6yOw8QzRXWieHDKySWrLOiBUZGRlRMjk9cgjjA64r03VpbC502KZ3LusKld5OB8owPfrXjviPxBHf+F9EijtILOe3lkjUxDAI2qRjOQSc8n2p1zrN3NpqxyNKMR7eHU9vWvOx1GMZRjDVHfg60pqUp6M6Oe7guPh1dpIVcAlc9MkMBWH4yja2S2+zXUsqec3yM25kHltnBJ549ea4a7vrpdDlt0Z/JZSNpxg/KOv9fwq14n1i4TToBOmcHJZWKkgKeOp9Ota04tNIxrNO5MLiSSy1Q+UWLQKxz1XCr1zW9obf8Uu9yJNv2aZZSv+63zf+Olvwrho7iWLT9QnUbIfKXfhT6eu7vxxz1rn7q31nULdHnuWWGQ5WAMdqg+1dKppKzdv+GON81R+6rn1L4GuY28NQDeJAIlGQcjgeteZeM4dOuPF92zzGKeK3j8v95tzyfwOP0zXD+G7Xxh4Vzf6NcSGEjMsGSUlUckFT9Oo5rZk1FtS8Zx6gWLR3NgHXkMRu2HaPcZ6+1KhCKT5ZXO3FzmqVpxaZObby4p/JufMQruKZJGcf59qaYoWspFKq58kna45DeuOgqldpJFqly8allUAlfQEYz9akhfdCHXcAY2AOO2en+NbM8oxdS3f8IrcjOMBRjOcZK1p6cwGkWmJfmZsMAeoAOB9Kwr+9gbRZbcoybmXLE8cEHvWxAyx2tnCMkKzY49j/nFY1lai/md2D1xMPVFZgf8AhKrQEZAjkwc/7NX7Mu3jmULKY2S3OHH8Py9aZpiJN4lKNjK20jrx3GBx+dLpqyN4x1MIpLLasAAM5O30ria+D/D/AO3H0FFu1R/3vygTKb6z1OSzt9QkaVQZNyRqY2TGQwU9OD0zmil0EtN4ibe/mEWrgEjkDIABHr0orvv2PmZyak7sW9vJn02ziaJWSGQgbFVTuKLn2zgDmoE1FRAwnWQMrEADbn6YzUviGKfT/DdnfbXBe9dUIGNw8oZ61nQXyvHlp2TAB+7/APWrnaUldI7NYOzI7idBo8wkhnDeXkccDIHv7VW8XTifTokWKVCjdSvtx3pur3qLFLbRPuUJklxgsfyqhrFw1zbxk5UDgr68fliuinHVM5aj3RoxFrnTpbdYXctHExwcDgjP+fauh8P6Dc+IfFNnpX2uGzjmkZPlVpCoVSc5GBkgdK5nTb6P7NPKHkP7tdoA4JHPP5V3+i6vBp+oaV4i02we9uBvLxx9Y/lK7cAZySevoK58VKUJJW3/AMj0MupwnTk76r/Pod/qXhObQtFkZtUS6ijVMrLGqDlwg5LAdW7mvGJ86d4mFrtciGBoxtXgDcOme3Fe0aZ8S4Zp4Y/EWhXenQuxAuJEJRT6kEcCvFvF0qHxfcyq2+ORPlKDIIOCMVlgk4uV1uaZlOVSmrvYa14oS7kSKU5VUU7eaypL2aENEjyooLA988mppp2Ecge3nDEjJK+nas5rkoUDI24hsAp65969Fanhso6lP5luqhVG9uePpXQ6JK8t2RklVd+o61UhtbeWyR5reSXDABiG4zjpjtWxpIjYoQArB5RkDGQMAVhiZr2TXqehl8b4mI7TXb/hLogoYjyXDEDoCV61Y01z/b2vXAIBjtiAT0HFRaHz4vaPJ5gzj8av+Goon1jxH5gUrgAgjg84xXA376X92P4yPoKatRqS/vT/AAgReDNsniQMHB/c4GDnJMij+tFNkDWGiz3drF5dzloxKufmBk4A/ED8qK9VJHyipyqNtM1PGkfmeBdLjbO4XrsCOAoMQwPeuQitlO3aWbABxI38q77xhbyaf4E0uQTqJJLtJlyG/dloSOcjDAYPTNcRFE4lJM4bHAZVzx61wYaTdP5s9TGxSmvRfkUWgt5J38xAgB4JJx+dVPEdtb21rD5SqGJbLZ68Vc1pGtLd7tZmLEgD5cZP5VyVzLLPIXlYsT+lehQg5PmvoeXWmlpYtRXKBUtA+2J3HmyAc7c8ge1etaV4SutIu5oo7dr+O4hDCBZ2jQKDneGH3lPocEGvHIjCyhZEKkfxr1/Ed/0rqrbxFfJfafdTFL02kJtoopCzIVIxnaCDnHfPoO1LGUZ1I2gzbL8RCjPmmr/p3PVv7LupLaK1XRtTs/P+VRb6t8pHqEbqK5f4raINHuLfUyGMDIsMpVduCPukhemcc+9M8M/ElbLWUfVtPsobKT92z2kREkGf4upyB3Ar0vxZLour+EZJIrqHVLe6iIiWJgzzE8AKBznPtxjnGK8Ne3wtaPOtGfTSeGx2HmoS1Xeytb9D5+BSZVlgRShnOCCSQM8A8+1NuCyNnYQAMHiq0cU2h68sbNHKqP8AMytuRh0OCOuORkfhXaojTJ8tnGyn++2M/ma96b5WuqPj7NmZYX0P9nR20kZXIGOPSrHhzD3lycEBY3PTgfMOlWXs4GUb44kb+6r7sfjVrTFh/wBIMWOIcEj13D2rgxclGk7dT1sni54uN+n+TIPC8ZfxxMRni0AwPrVjR5JLc+JrmFQzpOqgE/7YH9ak8Ewk+JL28H8MCrn86TRpSmi+I5woO67C565+cGuSTtV+UPzPoYwvg5Pu6v5WMm8vUnt7W3WEAws0hPP5Z78n9KKqo7SXDgZJWMAY7ZPp+FFem2fLQjZHWeLpbyXwLYi4hkSOK4iELkZUjynztNY9jblrdHJ5ZQetbPi3VBd/DvTLEHH2WWMsSeMsj1h2FzILSNFRSQoGS3FYezUI2h3N5yc5Jz3t+rMTxvII5ILc9ApcjPviuVdBvwO1bXi95ZdWLMVOEVSAenFZttGWiztyQxBr0qK5aaPLrazZFDFvcJ69600t3KoqEbVHztjaf/r0+xsiuZHGD2FWCnzEU5S7BCFlqZF+u9xHGMKvA46mtzwpPIbCa2EjrtO11U43A9jVP7P85fGR0H1qxp9s1rqAR0JS4TjnGSPelNpxsXBNSuJrUKzlUXlo8sxB+6Md/rxT7DVZVtUjWBCyfLliSfxrSntQls4CgKVICgdzWabZrVleJTtk4OOzdf5VndNWKlB3uWIry9kmTeCsZYbhHHjjvyTW34cnW6hvmQMAsSg59d1c5K85APmOPY10fhGPybDVCVAOyMcD3NcWO0oP5fmj1MkV8ZH0f/pLN/wZHsF+/J3EL7cA1gWsrQeC9Tn+cBtSQMV64zXQ+DiDDe8nIcn2HBrlm83/AIVvO8TqGfVFJJ7D5z/QVx2vXa/wflc99y5cE3/19/8ASrGRFfRq80qCVGLKu3ZkgDJJz+NFYclxJHFsiLKzE7vQUV7XsUz4721jrdRkL6JPEWzta3YgHocOPrS6fbRm0jdnY5UcZqz4wt5ornWjLGke2eFQiZwuC3HNR6cHbTISOoj4zwM1xOXu3X9aI6+X3lft+rOU1kodQnKkMhbC59BxUekyLAZZX5OQq5qtdzMZpDKEDMxLFc5pdNZMktlsHNeny2jY8zm9+5uz3CrCP7zDJx2NOtreR0EkgIB6+pqDTbeS5mFxIp8tTwp71rpHJcXIjUHaPSsG7aHRFc2ollZefMvy8DoKseIoRCbVFOJFcEc1u2VqttAZJBjArmL+4N7riqOQprOMuZ3NpRUY26s0trbeV59T3qpdrttgWXG2QsSOw6VLJfpHIHaMsjdg2Pzqtq96Lu2EcCCNM5Iz1qFJ3WhbjGzbZnzkFtygfhXUeFJUl0K/k7kx8j/gVcXllJBzjpXWeD1MfhTUS+F/0iNR/wB8mufHr9z81+Z25K/9qT8pfkze8HFPs2sNkcI34dazPDLR2/gqKSW2W5LXu5EY/LvAcqWHcAjOO/0rS8H4XRtflx/Cc/kai8KQK3gCJtudsztkdeVf/GuJfxpX7x/9JPaqu2CTXaf41EefajZKTIWPOSf15orQuIHuLlkjJYKCST6CivbjOy3PkJQu9jofGl22oW2o6gQFN1cQuwUADJzngVnWjEaKhzgCIn9DRRXFFe6l5/odkm+a/l+pxF2oHO38+lW9Dt0kUSTNhMk49eaKK9Wb908qCTmbyyeYypGNqDgAV1eg2SRp50nT1NFFcNbTQ9Ggru7KniXVYwjJE4CjgiuT099qy3BPzMcD8aKK1hFKJhUk3PUmswbiB1Y/6tsde3WiRNoooqX8Q1sVJ26AqPrXWeHFK+DLtjwTfIP/AByiiuTHfwl6r8z1Mm/3h/4X+RpeFX2+F/EjkY27++c/Ka1/Aaf8UFEpCN5rMACucYDdPQ84/GiivPn/ABJf4l/6Se1LXCR/wv8A9OHO3lmljZPAi77iRQZWz6noKKKK9KnJ2PmqkVex/9k=';
+function buildProfileWidget() {
+  const s = (()=>{ try { const x=JSON.parse(localStorage.getItem('crm_session')||'null'); return (x && Date.now()-x.lastActive<=3600000)?x:null; } catch{return null;} })();
+  const isAdmin = s && s.role==='admin';
+  const displayName = isAdmin ? 'Abdelrahman' : 'Guest';
+  const roleLabel   = isAdmin ? 'Admin' : 'Viewer';
+  const w = document.createElement('div');
+  w.className = 'profile-widget'; w.id = 'profileWidget';
+  w.innerHTML = `
+    <img class="profile-avatar" src="${AVATAR_SRC}" alt="">
+    <div style="line-height:1.2">
+      <div class="profile-name">${displayName}</div>
+      <div class="profile-role">${roleLabel}</div>
+    </div>
+    <span class="profile-chevron">▼</span>
+    <div class="profile-dropdown">
+      <div class="pd-header">
+        <img class="pd-avatar" src="${AVATAR_SRC}" alt="">
+        <div><div class="pd-name">${displayName}</div><span class="pd-role-badge ${isAdmin?'':'guest'}">${roleLabel}</span></div>
+      </div>
+      ${isAdmin?`<div class="pd-item" onclick="location.href='index.html'"><span class="pd-item-icon">➕</span> Add Doctor</div>`:''}
+      <div class="pd-item" onclick="location.href='plan.html'"><span class="pd-item-icon">📅</span> Plan</div>
+      <div class="pd-item" onclick="location.href='dashboard.html'"><span class="pd-item-icon">📊</span> Dashboard</div>
+      <div class="pd-item logout" onclick="doLogout()"><span class="pd-item-icon">🚪</span> Logout</div>
+    </div>`;
+  w.addEventListener('click', e=>{ e.stopPropagation(); w.classList.toggle('open'); });
+  document.addEventListener('click', ()=>w.classList.remove('open'));
+  return w;
+}
+window.doLogout = function() { localStorage.removeItem('crm_session'); sessionStorage.removeItem('crm_redirect'); location.replace('login.html'); };
+window.doLogoutGuest = function() { localStorage.removeItem('crm_session'); sessionStorage.removeItem('crm_redirect'); location.replace('login.html'); };
+document.addEventListener('DOMContentLoaded', ()=>{
+  const m = document.getElementById('profileMount');
+  if(m) m.appendChild(buildProfileWidget());
+});
+
+</script>
+</body>
+</html>
