@@ -173,19 +173,15 @@ function renderDoctorChoices(){
   const box=document.getElementById('doctorOptions');
   const dateStr=dateKey(selectedDate);
   const dayName=selectedDayName();
-  // Sort: available doctors first, then unavailable
-  const sorted=[...doctors].sort((a,b)=>{
-    const aAvail=isAvailableOnSelectedDay(a), bAvail=isAvailableOnSelectedDay(b);
-    if(aAvail!==bAvail)return aAvail?-1:1;
+  const available=doctors.filter(isAvailableOnSelectedDay).sort((a,b)=>{
     return (doctorTiming(a,dayName)||'').localeCompare(doctorTiming(b,dayName)||'')||(doctorLocation(a)||'').localeCompare(doctorLocation(b)||'')||(a.name||'').localeCompare(b.name||'');
   });
-  if(!sorted.length){box.innerHTML='<div class="empty">No doctors found.</div>';document.getElementById('addSelectedBtn').disabled=true;return}
-  box.innerHTML=sorted.map(d=>{
-    const avail=isAvailableOnSelectedDay(d);const rule=avail?validateDoctor(d.id,dateStr):{ok:false,msg:'Not available this day'};
-    const time=avail?doctorTiming(d,dayName)||'No timing':'—';const location=doctorLocation(d)||'No location';
+  if(!available.length){box.innerHTML='<div class="empty">No doctors available on this day.</div>';document.getElementById('addSelectedBtn').disabled=true;return}
+  box.innerHTML=available.map(d=>{
+    const rule=validateDoctor(d.id,dateStr);const time=doctorTiming(d,dayName)||'No timing';const location=doctorLocation(d)||'No location';
     return `<label class="doctor-option ${rule.ok?'':'blocked'}">
       <input type="checkbox" class="doctor-choice" value="${d.id}" ${rule.ok&&!IS_GUEST?'':'disabled'}>
-      <div><div class="doc-name">${esc(d.name||'Unknown')} ${avail?'✅':''}</div><div class="doc-meta">${esc(d.specialty||'')} · ${esc(d.clinic||'No clinic')} · ${esc(location)}${avail?`<br>Time: ${esc(time)}`:''}</div><span class="tag ${rule.ok?'':'err'}">${rule.msg}</span></div>
+      <div><div class="doc-name">${esc(d.name||'Unknown')}</div><div class="doc-meta">${esc(d.specialty||'')} · ${esc(d.clinic||'No clinic')} · ${esc(location)}<br>Time: ${esc(time)}</div><span class="tag ${rule.ok?'':'err'}">${rule.msg}</span></div>
     </label>`;
   }).join('');
   document.getElementById('addSelectedBtn').disabled=IS_GUEST;
@@ -219,20 +215,23 @@ async function load(){
 }
 window.moveMonth=function(n){viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()+n,1);selectedDate=new Date(viewDate.getFullYear(),viewDate.getMonth(),1);renderAll()}
 window.addSelectedDoctors=async function(){
-  if(IS_GUEST)return;
+  if(IS_GUEST){console.warn('Guest cannot add plans');return}
   const ids=[...document.querySelectorAll('.doctor-choice:checked')].map(x=>x.value);
-  if(!ids.length)return;
+  if(!ids.length){console.warn('No doctors selected');return}
   const dateStr=dateKey(selectedDate);const d=new Date(dateStr+'T12:00:00');const btn=document.getElementById('addSelectedBtn');
   btn.disabled=true;btn.textContent='Adding…';
-  let added=0;
+  let added=0,failed=0;
   for(const id of ids){
     try{
-      const doctor=doctors.find(x=>x.id===id);if(!doctor)continue;
+      const doctor=doctors.find(x=>x.id===id);
+      if(!doctor){console.warn('Doctor not found:',id);failed++;continue}
       const payload={doctorId:doctor.id,doctorName:doctor.name,clinic:doctor.clinic||'',place:doctorLocation(doctor),specialty:doctor.specialty||'',timing:doctorTiming(doctor,selectedDayName())||'',date:dateStr,dayName:selectedDayName(),monthKey:monthKey(d),weekIndex:weekIndex(d),createdAt:serverTimestamp()};
+      console.log('Adding plan:',payload);
       const ref=await addDoc(collection(db,'plans'),payload);plans.push({id:ref.id,...payload});added++;
-    }catch(e){console.error('Failed to add plan:',e)}
+    }catch(e){console.error('Failed to add plan:',e);failed++}
   }
   btn.disabled=false;btn.textContent='Add Selected To Plan';
+  console.log(`Added ${added}, failed ${failed}`);
   if(added)renderAll();
 }
 window.deletePlan=async function(id){if(IS_GUEST)return;await deleteDoc(doc(db,'plans',id));plans=plans.filter(p=>p.id!==id);renderAll()}
