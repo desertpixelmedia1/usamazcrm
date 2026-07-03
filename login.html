@@ -56,6 +56,12 @@ input:focus{border-color:rgba(201,168,76,0.35);background:#1e1e2e}
 #toast{position:fixed;top:20px;right:20px;z-index:999;background:var(--surface);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:12px 18px;font-family:'Inter',sans-serif;font-size:13px;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,0.5);opacity:0;transform:translateY(-10px);transition:0.25s;pointer-events:none;max-width:320px}
 #particleCanvas{position:fixed;inset:0;z-index:0;pointer-events:none}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.divider{display:flex;align-items:center;gap:12px;margin:14px 0 12px;color:var(--muted);font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.btn-guest{width:100%;padding:14px;background:transparent;border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:6px;min-height:48px}
+.btn-guest:hover{background:rgba(201,168,76,0.06);border-color:rgba(201,168,76,0.25)}
+.btn-guest:active{transform:scale(0.98)}
+.guest-badge{font-size:9px;font-weight:700;letter-spacing:1px;color:var(--gold);background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2);border-radius:4px;padding:2px 7px}
 body{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;overscroll-behavior:none;-webkit-overflow-scrolling:touch}
 input{font-size:16px!important}body{text-size-adjust:100%;-webkit-text-size-adjust:100%}
 @media(max-width:480px){.wrap{padding:16px 14px}.logo-ring{width:64px;height:64px;border-radius:20px}h1{font-size:24px}.card{padding:18px 16px}.btn{min-height:48px;padding:13px}.welcome-logo{width:80px;height:80px;border-radius:22px}.welcome-title{font-size:28px}.welcome-btn{padding:12px 36px;font-size:14px}}
@@ -90,9 +96,15 @@ input{font-size:16px!important}body{text-size-adjust:100%;-webkit-text-size-adju
       <div class="err-msg" id="errMsg">Incorrect username or password</div>
     </div>
     <button class="btn" id="loginBtn" onclick="tryLogin()">Sign In</button>
+
+    <div class="divider"><span>or</span></div>
+
+    <button class="btn-guest" onclick="guestLogin()">
+      👁️ Continue as Guest &nbsp;<span class="guest-badge">VIEW ONLY</span>
+    </button>
   </div>
 
-  <div class="footer">Built by <strong>Abdelrahman Usama</strong></div>
+  <div class="footer">Built by <strong>Abdelrahman Usama</strong> · <a href="https://instagram.com/a.usama56" target="_blank" style="color:var(--gold);text-decoration:none">@a.usama56</a></div>
 
 </div>
 
@@ -168,6 +180,12 @@ function tryLogin() {
     document.getElementById('errMsg').classList.add('show');
     document.getElementById('password').value = '';
   }
+}
+function guestLogin() {
+  setSession('guest');
+  const dest = sessionStorage.getItem('crm_redirect') || 'dashboard.html';
+  sessionStorage.removeItem('crm_redirect');
+  location.href = dest;
 }
 window.toast=function(m){var t=document.getElementById('toast');t.textContent=m;t.style.opacity='1';t.style.transform='translateY(0)';clearTimeout(t._t);t._t=setTimeout(function(){t.style.opacity='0';t.style.transform='translateY(-10px)'},2500)};
 </script>
