@@ -207,6 +207,7 @@
 
 
 
+#toast{position:fixed;top:20px;right:20px;z-index:999;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 18px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.4);opacity:0;transform:translateY(-10px);transition:.25s;pointer-events:none;max-width:320px}
 #particleCanvas{position:fixed;inset:0;z-index:1;pointer-events:none}
 .floating-orbs{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden}
 .floating-orbs .orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.28}
@@ -218,6 +219,7 @@
 </style>
 </head>
 <body>
+<div id="toast"></div>
 <div class="grid-bg"></div>
 <div class="floating-orbs"><div class="orb"></div><div class="orb"></div><div class="orb"></div></div>
 <div class="container">
@@ -233,6 +235,7 @@
     </div>
     <div class="header-btns">
       <button class="btn-primary btn-export admin-only" onclick="exportExcel()">📤 Export Excel</button>
+      <button class="btn-primary admin-only" onclick="exportFilteredCSV()" style="background:linear-gradient(135deg,#334155,#0f766e)">📋 CSV</button>
       <a href="plan.html" class="btn-primary">📅 Plan</a>
       <button class="btn-primary btn-select admin-only" id="bulkSelectBtn" onclick="toggleBulkSelect()">Select Doctors</button>
       <button class="btn-primary btn-danger admin-only" id="bulkDeleteBtn" onclick="deleteSelectedDoctors()" style="display:none" disabled>Delete Selected</button>
@@ -367,9 +370,9 @@
   // Store role globally for use after DOM loads
   window._crmRole = s.role;
 })();
-</script>
+window.toast=function(m){var t=document.getElementById('toast');t.textContent=m;t.style.opacity='1';t.style.transform='translateY(0)';clearTimeout(t._t);t._t=setTimeout(function(){t.style.opacity='0';t.style.transform='translateY(-10px)'},2500)};</script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">window.toast=function(m){var t=document.getElementById('toast');t.textContent=m;t.style.opacity='1';t.style.transform='translateY(0)';clearTimeout(t._t);t._t=setTimeout(function(){t.style.opacity='0';t.style.transform='translateY(-10px)'},2500)};</script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
 import { getFirestore, collection, getDocs, doc, deleteDoc, updateDoc, orderBy, query } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
@@ -510,6 +513,7 @@ function render() {
     const mQ = !q || (x.name||'').toLowerCase().includes(q) || (x.clinic||'').toLowerCase().includes(q) || (x.brick||'').toLowerCase().includes(q);
     return mSpec && mDay && mPri && mQ;
   });
+  window._filtered = filtered;
 
   // Sorting
   if (sortMode === 'day') {
@@ -660,7 +664,7 @@ window.deleteSelectedDoctors = async function() {
     selectedDoctorIds.clear();
     bulkSelectMode = false;
     updateDashboardSummary();
-    render();
+    window.toast('? Deleted ' + ids.length + ' doctor' + (ids.length>1?'s':'') + ' successfully');render();
   } catch(e) {
     console.error(e);
     updateBulkActions();
@@ -674,14 +678,14 @@ window.setVisitCount = async function(id, n) {
   if (!d) return;
   const visits = { ...(d.visits || {}) };
   const current = visits[monthKey] || 0;
-  // If clicking the button that matches current count, toggle off (set to n-1); else set to n
   visits[monthKey] = current === n ? n - 1 : n;
   try {
     await updateDoc(doc(db, 'doctors', id), { visits });
     d.visits = visits;
-    render();
+    render();window.toast('? Visit set to ' + visits[monthKey] + ' for ' + d.name);
   } catch(e) { console.error(e); }
 };
+
 
 window.editDoctor = function(id) {
   const d = doctors.find(x=>x.id===id);
@@ -699,11 +703,12 @@ window.askVisit = async function(id, name) {
   const monthKey = currentMonthKey();
   try {
     const d = doctors.find(x => x.id === id);
+    if (!d) return;
     const visits = { ...(d.visits || {}) };
     visits[monthKey] = (visits[monthKey] || 0) + 1;
     await updateDoc(doc(db, 'doctors', id), { visits });
     d.visits = visits;
-    render();
+    render();window.toast('? Visit +1 for ' + name);
   } catch(e) { console.error(e); }
 };
 
@@ -712,22 +717,24 @@ window.askFollowup = async function(id, name) {
   const monthKey = currentMonthKey();
   try {
     const d = doctors.find(x => x.id === id);
+    if (!d) return;
     const followups = { ...(d.followups || {}) };
     followups[monthKey] = (followups[monthKey] || 0) + 1;
     await updateDoc(doc(db, 'doctors', id), { followups });
     d.followups = followups;
-    render();
+    render();window.toast('? Followup logged for ' + name);
   } catch(e) { console.error(e); }
 };
 
-// Direct delete — no popup
+// Direct delete — with confirmation
 window.askDelete = async function(id, name) {
+  if (!confirm('Delete ' + name + '?')) return;
   try {
     await deleteDoc(doc(db, 'doctors', id));
     doctors = doctors.filter(d=>d.id!==id);
     selectedDoctorIds.delete(id);
     updateDashboardSummary();
-    render();
+    render();window.toast('? Deleted ' + name);
   } catch(e) { console.error(e); }
 };
 
@@ -749,6 +756,25 @@ window.exportExcel = function() {
   XLSX.writeFile(wb, `doctors_${new Date().toISOString().slice(0,10)}.xlsx`);
 };
 window.exportCSV = window.exportExcel;
+
+window.exportFilteredCSV = function() {
+  const list = window._filtered || doctors;
+  const headers = ['Name','Clinic','Brick','Specialty','Days','Timings','Priority','Comments','This Month Visits'];
+  const monthKey = currentMonthKey();
+  const rows = list.map(d=>[
+    d.name,d.clinic,d.brick,d.specialty,
+    (d.days||[d.day]).join(';'),
+    (d.days||[d.day]).map(day => `${day}: ${d.timings&&d.timings[day]?d.timings[day]:''}`).join('; '),
+    d.priority||'—',d.comments||'—',
+    d.visits && d.visits[monthKey] ? d.visits[monthKey] : 0
+  ]);
+  const csv = [headers.join(','), ...rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(','))].join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `doctors_filtered_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  window.toast('? Exported ' + list.length + ' doctor' + (list.length>1?'s':'') + ' as CSV');
+};
 
 window.clearFilters = function() {
   document.getElementById('specFilter').value='all';
@@ -805,12 +831,12 @@ document.addEventListener('DOMContentLoaded', ()=>{
   if(m) m.appendChild(buildProfileWidget());
 });
 
-</script>
+window.toast=function(m){var t=document.getElementById('toast');t.textContent=m;t.style.opacity='1';t.style.transform='translateY(0)';clearTimeout(t._t);t._t=setTimeout(function(){t.style.opacity='0';t.style.transform='translateY(-10px)'},2500)};</script>
 <script>
 // ── INSANE UPGRADES ──
 (function(){const c=document.createElement('canvas');c.id='particleCanvas';document.body.prepend(c);const x=c.getContext('2d');let p=[];const s=['💊','🩺','❤️','⚕️','🏥','+'];function rs(){c.width=innerWidth;c.height=innerHeight}rs();addEventListener('resize',rs);class P{constructor(){this.R()}R(){this.x=Math.random()*c.width;this.y=c.height+20;this.s=12+Math.random()*16;this.sy=-(.3+Math.random()*.7);this.sx=(Math.random()-.5)*.5;this.sym=s[Math.floor(Math.random()*s.length)];this.o=.2+Math.random()*.3;this.r=Math.random()*Math.PI*2;this.rs=(Math.random()-.5)*.02}update(){this.x+=this.sx;this.y+=this.sy;this.r+=this.rs;if(this.y<-30)this.R()}draw(){x.save();x.globalAlpha=this.o;x.translate(this.x,this.y);x.rotate(this.r);x.font=this.s+'px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(this.sym,0,0);x.restore()}}for(let i=0;i<18;i++){const n=new P();n.y=Math.random()*c.height;p.push(n)}function L(){x.clearRect(0,0,c.width,c.height);p.forEach(v=>{v.update();v.draw()});requestAnimationFrame(L)}L()})();
 
 
-</script>
+window.toast=function(m){var t=document.getElementById('toast');t.textContent=m;t.style.opacity='1';t.style.transform='translateY(0)';clearTimeout(t._t);t._t=setTimeout(function(){t.style.opacity='0';t.style.transform='translateY(-10px)'},2500)};</script>
 </body>
 </html>

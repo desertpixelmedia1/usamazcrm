@@ -208,6 +208,7 @@
 .reveal.visible{opacity:1;transform:translateY(0)}
 .typewriter-h1::after{content:'|';animation:blink .8s infinite;color:var(--accent2);font-weight:300}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+#toast{position:fixed;top:20px;right:20px;z-index:999;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 18px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.4);opacity:0;transform:translateY(-10px);transition:.25s;pointer-events:none;max-width:320px}
 #particleCanvas{position:fixed;inset:0;z-index:1;pointer-events:none}
 .floating-orbs{z-index:1}
 .card,.import-card{transform-style:preserve-3d;position:relative}
@@ -219,6 +220,7 @@
 </style>
 </head>
 <body>
+<div id="toast"></div>
 <div class="grid-bg"></div>
 <div class="floating-orbs"><div class="orb"></div><div class="orb"></div><div class="orb"></div></div>
 <div class="container">
@@ -404,10 +406,10 @@
   else if (s.role === 'guest') { location.href='dashboard.html'; } // guests can't access add/edit
   else { touch(); document.addEventListener('click', touch); document.addEventListener('keydown', touch); }
 })();
-</script>
+window.toast=function(m){var t=document.getElementById('toast');t.textContent=m;t.style.opacity='1';t.style.transform='translateY(0)';clearTimeout(t._t);t._t=setTimeout(function(){t.style.opacity='0';t.style.transform='translateY(-10px)'},2500)};</script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, doc, updateDoc, serverTimestamp, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
 const config = {
   apiKey:"AIzaSyDGgF8rIs2aJv6Ov5cHijl4fpHvFJRgCkM",
@@ -585,15 +587,22 @@ window.saveDoctor = async function() {
   try {
     if (editId) {
       await updateDoc(doc(db, 'doctors', editId), payload);
-      
+      window.toast('? Doctor updated');
       setTimeout(()=>location.href='dashboard.html', 1500);
     } else {
+      // Duplicate detection
+      const dupQ = query(collection(db, 'doctors'), where('name', '==', nameVal), where('clinic', '==', clinicVal));
+      const dupSnap = await getDocs(dupQ);
+      if (!dupSnap.empty) {
+        const confirmDup = confirm('Duplicate found: "' + nameVal + '" at "' + clinicVal + '" already exists.\n\nContinue saving anyway?');
+        if (!confirmDup) { btn.classList.remove('loading'); document.getElementById('saveBtnText').textContent = 'Save Doctor ?'; return; }
+      }
       payload.createdAt = serverTimestamp();
       // visit & followup tracking — initialised empty, keyed by "YYYY-MM"
       payload.visits = {};
       payload.followups = {};
       await addDoc(collection(db, 'doctors'), payload);
-      
+      window.toast('? Doctor saved: ' + nameVal);
       ['drName','clinic','brick','comments'].forEach(id=>document.getElementById(id).value='');
       document.getElementById('specialty').value='';
       selectedDays=[]; timings={};
@@ -642,8 +651,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
   if(m) m.appendChild(buildProfileWidget());
 });
 
-</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+window.toast=function(m){var t=document.getElementById('toast');t.textContent=m;t.style.opacity='1';t.style.transform='translateY(0)';clearTimeout(t._t);t._t=setTimeout(function(){t.style.opacity='0';t.style.transform='translateY(-10px)'},2500)};</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">window.toast=function(m){var t=document.getElementById('toast');t.textContent=m;t.style.opacity='1';t.style.transform='translateY(0)';clearTimeout(t._t);t._t=setTimeout(function(){t.style.opacity='0';t.style.transform='translateY(-10px)'},2500)};</script>
 <script>
 // ── Excel Import Logic ─────────────────────────────────────────
 const FIELDS = [
@@ -916,7 +925,7 @@ window.downloadTemplate = function() {
   XLSX.utils.book_append_sheet(wb, ws, 'Doctors');
   XLSX.writeFile(wb, 'MedRep_Import_Template.xlsx');
 };
-</script>
+window.toast=function(m){var t=document.getElementById('toast');t.textContent=m;t.style.opacity='1';t.style.transform='translateY(0)';clearTimeout(t._t);t._t=setTimeout(function(){t.style.opacity='0';t.style.transform='translateY(-10px)'},2500)};</script>
 <script>
 // ── INSANE UPGRADES ──
 (function(){const c=document.createElement('canvas');c.id='particleCanvas';document.body.prepend(c);const x=c.getContext('2d');let p=[];const s=['💊','🩺','❤️','⚕️','🏥','+'];function rs(){c.width=innerWidth;c.height=innerHeight}rs();addEventListener('resize',rs);class P{constructor(){this.R()}R(){this.x=Math.random()*c.width;this.y=c.height+20;this.s=12+Math.random()*16;this.sy=-(.3+Math.random()*.7);this.sx=(Math.random()-.5)*.5;this.sym=s[Math.floor(Math.random()*s.length)];this.o=.2+Math.random()*.3;this.r=Math.random()*Math.PI*2;this.rs=(Math.random()-.5)*.02}update(){this.x+=this.sx;this.y+=this.sy;this.r+=this.rs;if(this.y<-30)this.R()}draw(){x.save();x.globalAlpha=this.o;x.translate(this.x,this.y);x.rotate(this.r);x.font=this.s+'px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(this.sym,0,0);x.restore()}}for(let i=0;i<18;i++){const n=new P();n.y=Math.random()*c.height;p.push(n)}function L(){x.clearRect(0,0,c.width,c.height);p.forEach(v=>{v.update();v.draw()});requestAnimationFrame(L)}L()})();
@@ -930,6 +939,6 @@ window.downloadTemplate = function() {
 (function(){if(location.href.includes('login.html'))return;const h=document.querySelector('h1');if(!h||h.dataset.tw)return;const t=h.textContent;h.dataset.tw='1';h.textContent='';h.classList.add('typewriter-h1');let i=0;function w(){if(i<t.length){h.textContent+=t[i];i++;setTimeout(w,35)}else{h.classList.remove('typewriter-h1')}}setTimeout(w,800)})();
 
 (function(){document.querySelectorAll('.badge').forEach(e=>e.classList.add('glow-hover'))})();
-</script>
+window.toast=function(m){var t=document.getElementById('toast');t.textContent=m;t.style.opacity='1';t.style.transform='translateY(0)';clearTimeout(t._t);t._t=setTimeout(function(){t.style.opacity='0';t.style.transform='translateY(-10px)'},2500)};</script>
 </body>
 </html>

@@ -34,6 +34,7 @@ input,select,textarea{font-size:16px!important}
 button,a,.btn,.day,.doctor-option input,.doctor-option label,.chip{touch-action:manipulation}
 #particleCanvas{display:none}
 @media(min-width:481px){#particleCanvas{display:block}}
+#toast{position:fixed;top:20px;right:20px;z-index:999;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 18px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.4);opacity:0;transform:translateY(-10px);transition:.25s;pointer-events:none;max-width:320px}
 #particleCanvas{position:fixed;inset:0;z-index:1;pointer-events:none}
 .floating-orbs{z-index:1;position:fixed;inset:0;pointer-events:none;overflow:hidden}
 .floating-orbs .orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.28}
@@ -47,6 +48,7 @@ button,a,.btn,.day,.doctor-option input,.doctor-option label,.chip{touch-action:
 </style>
 </head>
 <body>
+<div id="toast"></div>
 <div class="grid-bg"></div>
 <div class="floating-orbs"><div class="orb"></div><div class="orb"></div><div class="orb"></div></div>
 <div class="container">
@@ -105,7 +107,7 @@ button,a,.btn,.day,.doctor-option input,.doctor-option label,.chip{touch-action:
 
   <div id="planned-daysTab" class="tab-content">
     <section class="card">
-      <div class="card-head"><div><div class="card-title">Planned Days</div><div class="sub">All days with planned visits grouped by date.</div></div></div>
+      <div class="card-head"><div><div class="card-title">Planned Days</div><div class="sub">All days with planned visits grouped by date.</div></div><div class="cal-controls"><button class="btn secondary" onclick="moveMonth(-1)">Prev</button><div class="month-label" id="pdMonthLabel"></div><button class="btn secondary" onclick="moveMonth(1)">Next</button></div></div>
       <div id="plannedDaysList"></div>
     </section>
   </div>
@@ -119,7 +121,7 @@ button,a,.btn,.day,.doctor-option input,.doctor-option label,.chip{touch-action:
   if(!s){sessionStorage.setItem('crm_redirect','plan.html');location.href='login.html';return}
   s.lastActive=Date.now();localStorage.setItem(KEY,JSON.stringify(s));window._crmRole=s.role;
 })();
-</script>
+window.toast=function(m){var t=document.getElementById('toast');t.textContent=m;t.style.opacity='1';t.style.transform='translateY(0)';clearTimeout(t._t);t._t=setTimeout(function(){t.style.opacity='0';t.style.transform='translateY(-10px)'},2500)};</script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
 import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp, orderBy, query, onSnapshot } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
@@ -193,6 +195,7 @@ function renderMonthPlan(){
 }
 function renderPlannedDays(){
   const el=document.getElementById('plannedDaysList');
+  document.getElementById('pdMonthLabel').textContent=viewDate.toLocaleString('en',{month:'long',year:'numeric'});
   const grouped={};
   const mk=monthKey(viewDate);
   plans.filter(p=>p.monthKey===mk).forEach(p=>{
@@ -241,15 +244,15 @@ window.addSelectedDoctors=async function(){
   }
   btn.disabled=false;btn.textContent='Add Selected To Plan';
   console.log(`Added ${added}, failed ${failed}`);
-  if(added){renderAll();switchTab('planned-days')}
+  if(added){window.toast('? Added ' + added + ' doctor' + (added>1?'s':'') + ' to plan' + (failed?' (' + failed + ' failed)':''));renderAll();switchTab('planned-days')}
 }
-window.deletePlan=async function(id){if(IS_GUEST)return;await deleteDoc(doc(db,'plans',id));plans=plans.filter(p=>p.id!==id);renderAll()}
+window.deletePlan=async function(id){if(IS_GUEST)return;await deleteDoc(doc(db,'plans',id));const p=plans.find(p=>p.id===id);plans=plans.filter(p=>p.id!==id);renderAll();window.toast('? Removed ' + (p?p.doctorName:'plan') + ' from plan')}
 load();
 </script>
 <script>
 (function(){const c=document.createElement('canvas');c.id='particleCanvas';document.body.prepend(c);const x=c.getContext('2d');let p=[];const s=['💊','🩺','❤️','⚕️','🏥','+'];function rs(){c.width=innerWidth;c.height=innerHeight}rs();addEventListener('resize',rs);class P{constructor(){this.R()}R(){this.x=Math.random()*c.width;this.y=c.height+20;this.s=12+Math.random()*16;this.sy=-(.3+Math.random()*.7);this.sx=(Math.random()-.5)*.5;this.sym=s[Math.floor(Math.random()*s.length)];this.o=.2+Math.random()*.3;this.r=Math.random()*Math.PI*2;this.rs=(Math.random()-.5)*.02}update(){this.x+=this.sx;this.y+=this.sy;this.r+=this.rs;if(this.y<-30)this.R()}draw(){x.save();x.globalAlpha=this.o;x.translate(this.x,this.y);x.rotate(this.r);x.font=this.s+'px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(this.sym,0,0);x.restore()}}for(let i=0;i<18;i++){const n=new P();n.y=Math.random()*c.height;p.push(n)}function L(){x.clearRect(0,0,c.width,c.height);p.forEach(v=>{v.update();v.draw()});requestAnimationFrame(L)}L()})();
 
 window.switchTab=function(tab){document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));document.getElementById(tab+'Tab').classList.add('active');document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');if(tab==='planned-days')renderPlannedDays()};
-</script>
+window.toast=function(m){var t=document.getElementById('toast');t.textContent=m;t.style.opacity='1';t.style.transform='translateY(0)';clearTimeout(t._t);t._t=setTimeout(function(){t.style.opacity='0';t.style.transform='translateY(-10px)'},2500)};</script>
 </body>
 </html>
