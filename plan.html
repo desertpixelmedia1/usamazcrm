@@ -122,7 +122,7 @@ button,a,.btn,.day,.doctor-option input,.doctor-option label,.chip{touch-action:
 </script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp, orderBy, query } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp, orderBy, query, onSnapshot } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 const config={apiKey:"AIzaSyDGgF8rIs2aJv6Ov5cHijl4fpHvFJRgCkM",authDomain:"usamacrm.firebaseapp.com",projectId:"usamacrm",storageBucket:"usamacrm.firebasestorage.app",messagingSenderId:"21544199204",appId:"1:21544199204:web:9d6bb252f90b5dba8764b1"};
 const db=getFirestore(initializeApp(config),'visitat');
 const IS_GUEST=window._crmRole==='guest';
@@ -210,8 +210,17 @@ function renderAll(){renderCalendarInto('daysGridTop');renderDoctorChoices();ren
 async function load(){
   if(IS_GUEST){document.getElementById('adminChoiceCard').style.display='none';document.getElementById('viewerNote').style.display='block';document.getElementById('addDoctorLink').style.display='none'}
   const ds=await getDocs(collection(db,'doctors'));doctors=ds.docs.map(d=>({id:d.id,...d.data()}));
-  try{const q=query(collection(db,'plans'),orderBy('date','asc'));const ps=await getDocs(q);plans=ps.docs.map(d=>({id:d.id,...d.data()}))}catch{const ps=await getDocs(collection(db,'plans'));plans=ps.docs.map(d=>({id:d.id,...d.data()}))}
-  renderAll();
+  const q=query(collection(db,'plans'),orderBy('date','asc'));
+  onSnapshot(q, (snap) => {
+    plans=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderAll();
+  }, () => {
+    // Fallback if ordered query fails (index not created yet)
+    getDocs(collection(db,'plans')).then(snap => {
+      plans=snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderAll();
+    });
+  });
 }
 window.moveMonth=function(n){viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()+n,1);selectedDate=new Date(viewDate.getFullYear(),viewDate.getMonth(),1);renderAll()}
 window.addSelectedDoctors=async function(){
