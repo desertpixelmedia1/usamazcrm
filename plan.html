@@ -232,7 +232,7 @@ window.addSelectedDoctors=async function(){
   }
   btn.disabled=false;btn.textContent='Add Selected To Plan';
   console.log(`Added ${added}, failed ${failed}`);
-  if(added)renderAll();
+  if(added){renderAll();switchTab('planned-days')}
 }
 window.deletePlan=async function(id){if(IS_GUEST)return;await deleteDoc(doc(db,'plans',id));plans=plans.filter(p=>p.id!==id);renderAll()}
 load();
